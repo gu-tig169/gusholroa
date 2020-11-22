@@ -8,21 +8,21 @@ void main() {
     home: MyToDo(),));}
 
 class MyToDo extends StatefulWidget {
-
   @override
   _MyToDoState createState() => _MyToDoState();
-
 }
 
 class _MyToDoState extends State<MyToDo> {
 
-  List<dynamic> _toDoList = [];
-  List<dynamic> _displayedList = [];
+  List<dynamic> _toDoList, _displayedList;
   final _myController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    _toDoList  = new List<dynamic>();
+    _displayedList = new List<dynamic>();
+    _toDoList.add(Item(0, "Sak att göra.", false));
     _displayedList = _toDoList;
   }
 
@@ -166,7 +166,6 @@ class _MyToDoState extends State<MyToDo> {
         ],
       ),
       body: _buildListOfTasks(),
-      //body: Container(child: SelectedOption(choice: _list),),
       floatingActionButton: FloatingActionButton(
         elevation: 4,
         backgroundColor: Colors.grey,
