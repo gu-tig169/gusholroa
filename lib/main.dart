@@ -1,186 +1,178 @@
+
 import 'package:flutter/material.dart';
-// Robin Holms Flutter-applikation.
+import './Item.dart';
+import './Constants.dart';
 
 void main() {
   runApp(MaterialApp(
-    home: SecondWindow(),));}
+    home: MyToDo(),));}
 
-class FirstWindow extends StatelessWidget {
+class MyToDo extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-          appBar: AppBar(
-            iconTheme: IconThemeData(color: Colors.black),
-            backgroundColor: Colors.grey,
-            leading: IconButton(icon:Icon(Icons.arrow_back_ios),
-              onPressed:() => Navigator.pop(context),
-            ),
-            title: Text('TIG 169 TODO', style: TextStyle(color: Colors.black)),
-          ),
-          body: Center(
-            child: Column(
-                children: <Widget> [
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(16, 32, 16, 16),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          width: 2.0,
-                          color: Colors.black,
-                        ),
-                      ),
-                      child: Padding(
-                        padding: EdgeInsets.fromLTRB(8, 8, 8, 8),
-                        child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text('What are you going to do?', style: TextStyle(color: Colors.grey))
-                        ),
-                      ),
+  _MyToDoState createState() => _MyToDoState();
+}
+
+class _MyToDoState extends State<MyToDo> {
+
+  List<dynamic> _toDoList, _displayedList;
+  final _myController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _toDoList  = new List<dynamic>();
+    _displayedList = new List<dynamic>();
+    _toDoList.add(Item(0, "Sak att göra.", false));
+    _displayedList = _toDoList;
+  }
+
+  void _selectMenuItem(String choiceItem) {
+    setState(() {
+      switch(choiceItem){
+        case "all": {
+          setState(() {
+            _displayedList = _toDoList;
+          });
+        }
+        break;
+        case "done": {
+          setState(() {
+            _displayedList = _toDoList.where((item) => item.isChecked).toList();
+          });
+        }
+        break;
+        case "undone": {
+          setState(() {
+            _displayedList = _toDoList.where((item) => !item.isChecked).toList();
+          });
+        }
+        break;
+      }
+    });
+  }
+
+  void _createToDoItem() {
+    if(_myController.text.length > 0) {
+      setState(() {
+        _toDoList.add(Item(_toDoList.length, _myController.text, false));
+        _displayedList = _toDoList;
+        _myController.clear();
+        Navigator.pop(context);
+      });
+    }
+  }
+
+  void _renderToDoPage(){
+    Navigator.of(context).push(
+        new MaterialPageRoute(
+            builder: (context) {
+              return new Scaffold(
+                  appBar: AppBar(
+                    iconTheme: IconThemeData(color: Colors.black),
+                    backgroundColor: Colors.grey,
+                    leading: IconButton(icon:Icon(Icons.arrow_back_ios),
+                      onPressed:() => Navigator.pop(context),
                     ),
+                    title: Text('TIG 169 TODO', style: TextStyle(color: Colors.black)),
                   ),
-                  Text('+ ADD', style: TextStyle(fontWeight: FontWeight.bold)),
-                ]
-            ),
-          )
-      ),
+                  body: Center(
+                    child: Column(
+                        children: <Widget> [
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(16, 32, 16, 16),
+                            child: Container(
+                              child: Padding(
+                                padding: EdgeInsets.fromLTRB(8, 8, 8, 8),
+                                child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: TextField(
+                                        autofocus: true,
+                                        controller: _myController,
+                                        decoration: InputDecoration(
+                                          border: OutlineInputBorder(),
+                                          labelText: 'What are you going to do?',
+                                        )
+                                    )
+                                ),
+                              ),
+                            ),
+                          ),
+                          RaisedButton.icon(
+                            icon: Icon(Icons.add),
+                            onPressed:() => _createToDoItem(),
+                            label: Text('ADD', style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ]
+                    ),
+                  )
+              );
+            }
+        )
     );
   }
-}
 
-class SecondWindow extends StatefulWidget {
-  @override
-  _SecondWindowState createState() => _SecondWindowState();
-}
-
-class _SecondWindowState extends State<SecondWindow> {
-
-  bool _isChecked = false;
-  bool _isChecked2 = false;
-  bool _isChecked3 = false;
-  var str = "List object";
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          iconTheme: IconThemeData(color: Colors.black),
-          backgroundColor: Colors.grey,
-          title: Text('TIG 169 TODO', style: TextStyle(color: Colors.black)),
-          actions: <Widget>[
-            PopupMenuButton<String>(
-              itemBuilder: (BuildContext context) {
-                return {'All', 'Done', 'Undone'}.map((String choice) {
-                  return PopupMenuItem<String>(
-                    value: choice,
-                    child: Text(choice),
-                  );
-                }).toList();
-              },
-            ),
-          ],
-        ),
-        body: Center(
-            child: ListView(
+  Widget _buildListOfTasks() {
+    // ignore: missing_return
+    return ListView.builder(
+        itemCount: _displayedList.length,
+        itemBuilder: (context, index) {
+          return Row(
               children: <Widget>[
-                Container(
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(width: 1, color: Colors.grey),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                          children: <Widget>[
-                            Checkbox(
-                              activeColor: Colors.grey,
-                              checkColor: Colors.black,
-                              value: _isChecked,
-                              onChanged: (bool value) {
-                                setState(() {
-                                  _isChecked = value;
-                                });
-                              },
-                            ),
-                            Text('List object', style: TextStyle(fontSize: 25)),
-                            Spacer(),
-                            CloseButton(),
-                          ]
-                      ),
-                    )
+                Checkbox(
+                  checkColor: Colors.black,
+                  activeColor: Colors.grey,
+                  value: _displayedList[index].isChecked,
+                  onChanged: (bool newValue) {
+                    setState(() {
+                      _displayedList[index].isChecked = newValue;
+                    });
+                  },
                 ),
-                Container(
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(width: 1, color: Colors.grey),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                          children: <Widget>[
-                            Checkbox(
-                              activeColor: Colors.grey,
-                              checkColor: Colors.black,
-                              value: _isChecked2,
-                              onChanged: (bool value) {
-                                setState(() {
-                                  _isChecked2 = value;
-                                });
-                              },
-                            ),
-                            Text('List object', style: TextStyle(fontSize: 25)),
-                            Spacer(),
-                            CloseButton(),
-                          ]
-                      ),
-                    )
+                Text(_displayedList[index].name, style: TextStyle(fontSize: 25)),
+                Spacer(),
+                CloseButton(
+                    onPressed: () {
+                      var removeMe = _displayedList[index];
+                      setState(() {
+                        _displayedList.remove(removeMe);
+                      });
+                      _toDoList.removeWhere((element) => element.id == removeMe.id);
+                    }
                 ),
-                Container(
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(width: 1, color: Colors.grey),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                          children: <Widget>[
-                            Checkbox(
-                              activeColor: Colors.grey,
-                              checkColor: Colors.black,
-                              value: _isChecked3,
-                              onChanged: (bool value) {
-                                setState(() {
-                                  _isChecked3 = value;
-                                });
-                              },
-                            ),
-                            Text('List object', style: TextStyle(fontSize: 25)),
-                            Spacer(),
-                            CloseButton(),
-                          ]
-                      ),
-                    )
-                ),
-              ],
-            )
-        ),
-        floatingActionButton: FloatingActionButton(
-          elevation: 4,
-          backgroundColor: Colors.grey,
-          child: const Icon(Icons.add),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) {
-                return FirstWindow();
-              }),
-            );
-          },
-        ),
-      ),
-    );
+              ]
+          );
+        });
   }
+
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+    home: Scaffold(
+      appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.black),
+        backgroundColor: Colors.grey,
+        title: Text('TIG 169 TODO', style: TextStyle(color: Colors.black)),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: _selectMenuItem,
+            itemBuilder: (BuildContext context) {
+              return Constants.ChoiceItems.map((String choiceItem) {
+                return PopupMenuItem<String>(
+                  value: choiceItem,
+                  child: Text(choiceItem),
+                );
+              }).toList();
+            },
+          )
+        ],
+      ),
+      body: _buildListOfTasks(),
+      floatingActionButton: FloatingActionButton(
+        elevation: 4,
+        backgroundColor: Colors.grey,
+        child: const Icon(Icons.add),
+        onPressed: _renderToDoPage,
+      ),
+    ),
+  );
+
 }
