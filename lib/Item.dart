@@ -6,10 +6,12 @@ class Item {
   bool isChecked;
   Item(this.id, this.name, this.isChecked);
 
-  static bool parseBool(String str) {
+  static bool toBool(String str) {
     if(str == 'true' || str == "True") {
       return true;
-    } else return false;
+    } else {
+      return false;
+    }
   }
 
 }
