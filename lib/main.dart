@@ -1,11 +1,9 @@
-
 import 'package:flutter/material.dart';
-import './Item.dart';
-import './Constants.dart';
+import './SecondView.dart';
+import './ToDoHandler.dart';
 
-void main() {
-  runApp(MaterialApp(
-    home: MyToDo(),));}
+void main() => runApp(MaterialApp(
+    home: MyToDo(),));
 
 class MyToDo extends StatefulWidget {
   @override
@@ -14,165 +12,97 @@ class MyToDo extends StatefulWidget {
 
 class _MyToDoState extends State<MyToDo> {
 
-  List<dynamic> _toDoList, _displayedList;
-  final _myController = TextEditingController();
+  List<dynamic> _toDoList = [];
+  var _filterBy = 'all';
 
-  @override
-  void initState() {
-    super.initState();
-    _toDoList  = new List<dynamic>();
-    _displayedList = new List<dynamic>();
-    _toDoList.add(Item(0, "Sak att göra.", false));
-    _displayedList = _toDoList;
-  }
-
-  void _selectMenuItem(String choiceItem) {
-    setState(() {
-      switch(choiceItem){
-        case "all": {
-          setState(() {
-            _displayedList = _toDoList;
-          });
-        }
-        break;
-        case "done": {
-          setState(() {
-            _displayedList = _toDoList.where((item) => item.isChecked).toList();
-          });
-        }
-        break;
-        case "undone": {
-          setState(() {
-            _displayedList = _toDoList.where((item) => !item.isChecked).toList();
-          });
-        }
-        break;
-      }
-    });
-  }
-
-  void _createToDoItem() {
-    if(_myController.text.length > 0) {
-      setState(() {
-        _toDoList.add(Item(_toDoList.length, _myController.text, false));
-        _displayedList = _toDoList;
-        _myController.clear();
-        Navigator.pop(context);
-      });
+  void _filterList(List<dynamic> list, String filterBy) {
+    if (_filterBy == 'done') {
+      _toDoList = list.where((item) => item.isChecked).toList();
+    } else if (_filterBy == 'undone') {
+      _toDoList = list.where((item) => !item.isChecked).toList();
+    } else {
+      _toDoList = list;
     }
   }
 
-  void _renderToDoPage(){
-    Navigator.of(context).push(
-        new MaterialPageRoute(
-            builder: (context) {
-              return new Scaffold(
-                  appBar: AppBar(
-                    iconTheme: IconThemeData(color: Colors.black),
-                    backgroundColor: Colors.grey,
-                    leading: IconButton(icon:Icon(Icons.arrow_back_ios),
-                      onPressed:() => Navigator.pop(context),
-                    ),
-                    title: Text('TIG 169 TODO', style: TextStyle(color: Colors.black)),
-                  ),
-                  body: Center(
-                    child: Column(
-                        children: <Widget> [
-                          Padding(
-                            padding: EdgeInsets.fromLTRB(16, 32, 16, 16),
-                            child: Container(
-                              child: Padding(
-                                padding: EdgeInsets.fromLTRB(8, 8, 8, 8),
-                                child: Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: TextField(
-                                        autofocus: true,
-                                        controller: _myController,
-                                        decoration: InputDecoration(
-                                          border: OutlineInputBorder(),
-                                          labelText: 'What are you going to do?',
-                                        )
-                                    )
-                                ),
-                              ),
-                            ),
-                          ),
-                          RaisedButton.icon(
-                            icon: Icon(Icons.add),
-                            onPressed:() => _createToDoItem(),
-                            label: Text('ADD', style: TextStyle(fontWeight: FontWeight.bold)),
-                          ),
-                        ]
-                    ),
-                  )
-              );
-            }
-        )
-    );
-  }
-
-  Widget _buildListOfTasks() {
-    // ignore: missing_return
-    return ListView.builder(
-        itemCount: _displayedList.length,
-        itemBuilder: (context, index) {
-          return Row(
-              children: <Widget>[
-                Checkbox(
-                  checkColor: Colors.black,
-                  activeColor: Colors.grey,
-                  value: _displayedList[index].isChecked,
-                  onChanged: (bool newValue) {
-                    setState(() {
-                      _displayedList[index].isChecked = newValue;
-                    });
-                  },
-                ),
-                Text(_displayedList[index].name, style: TextStyle(fontSize: 25)),
-                Spacer(),
-                CloseButton(
-                    onPressed: () {
-                      var removeMe = _displayedList[index];
-                      setState(() {
-                        _displayedList.remove(removeMe);
-                      });
-                      _toDoList.removeWhere((element) => element.id == removeMe.id);
-                    }
-                ),
-              ]
-          );
-        });
-  }
-
   @override
-  Widget build(BuildContext context) => MaterialApp(
-    home: Scaffold(
-      appBar: AppBar(
-        iconTheme: IconThemeData(color: Colors.black),
-        backgroundColor: Colors.grey,
-        title: Text('TIG 169 TODO', style: TextStyle(color: Colors.black)),
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: _selectMenuItem,
-            itemBuilder: (BuildContext context) {
-              return Constants.ChoiceItems.map((String choiceItem) {
-                return PopupMenuItem<String>(
-                  value: choiceItem,
-                  child: Text(choiceItem),
+  Widget build(BuildContext context) => Scaffold(
+      appBar: _myAppBar(),
+      body: _myListView(),
+      floatingActionButton: _myActionButton(),
+    );
+
+  Widget _myAppBar() => AppBar(
+      iconTheme: IconThemeData(color: Colors.black),
+      backgroundColor: Colors.grey,
+      title: Text('My ToDo', style: TextStyle(color: Colors.black)),
+      actions: [
+        PopupMenuButton(
+            onSelected: (value) => setState(() => _filterBy = value),
+            itemBuilder: (context) => [
+              PopupMenuItem(child: Text('all'), value: 'all'),
+              PopupMenuItem(child: Text('done'), value: 'done'),
+              PopupMenuItem(child: Text('undone'), value: 'undone'),
+            ]
+        ),
+      ],
+    );
+
+  Widget _myListView() => FutureBuilder<List<dynamic>>(
+      future: ToDoHandler.get(),
+      builder: (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot) {
+        if (snapshot.hasData) {
+          _filterList(snapshot.data, _filterBy);
+          return ListView.builder(
+              itemCount: _toDoList.length,
+              itemBuilder: (context, index) {
+                if (_toDoList[index].name == null) {
+                  _toDoList[index].name = "No name";
+                }
+                return Row(
+                    children: <Widget>[
+                      Checkbox(
+                        checkColor: Colors.black,
+                        activeColor: Colors.grey,
+                        value: _toDoList[index].isChecked,
+                        onChanged: (bool newValue) async {
+                          await ToDoHandler.put(_toDoList[index].id, _toDoList[index].name, newValue);
+                          setState(() {});
+                        },
+                      ),
+                      Text(_toDoList[index].name, style: TextStyle(fontSize: 18)),
+                      Spacer(),
+                      CloseButton(
+                          onPressed: () async {
+                            await ToDoHandler.delete(_toDoList[index].id);
+                            setState(() {});
+                          }
+                      ),
+                    ]
                 );
-              }).toList();
-            },
-          )
-        ],
-      ),
-      body: _buildListOfTasks(),
-      floatingActionButton: FloatingActionButton(
-        elevation: 4,
-        backgroundColor: Colors.grey,
-        child: const Icon(Icons.add),
-        onPressed: _renderToDoPage,
-      ),
-    ),
-  );
+              });
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else {
+          return Center(child: CircularProgressIndicator());
+        }
+      },
+    );
+
+  Widget _myActionButton() => FloatingActionButton(
+      elevation: 4,
+      backgroundColor: Colors.grey,
+      child: const Icon(Icons.add),
+      onPressed: () async {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => SecondView()),
+        );
+        if (result != null) {
+          await ToDoHandler.post(result);
+          setState(() {});
+        }
+      },
+    );
 
 }
